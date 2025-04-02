@@ -15,12 +15,12 @@ isort = "^6.0.1"
 mypy = "^1.15.0"
 
 [tool.black]
-line-length = 88
+line-length = 150
 target-version = ['py39']
 
 [tool.isort]
 profile = "black"
-line_length = 88
+line_length = 150
 
 [tool.mypy]
 python_version = "3.9"
