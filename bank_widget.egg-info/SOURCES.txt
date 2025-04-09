@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+setup.py
+bank_widget.egg-info/PKG-INFO
+bank_widget.egg-info/SOURCES.txt
+bank_widget.egg-info/dependency_links.txt
+bank_widget.egg-info/top_level.txt
+src/__init__.py
+src/masks.py
+src/processing.py
+src/widget.py
+tests/test_data.py
+tests/test_processing.py
+tests/test_widget.py
