@@ -5,6 +5,6 @@
 
 ## Установка
 ```bash
-git clone <https://github.com/vladreson/bank_widget.git>
+git clone <https://github.com/vladreson/bank_widget.git.>
 cd bank_widget
 pip install -e .
