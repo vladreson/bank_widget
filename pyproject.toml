@@ -20,6 +20,7 @@ autopep8 = "^2.3.2"
 flake8 = "^7.2.0"
 isort = "^6.0.1"
 mypy = "^1.15.0"
+black = "^25.1.0"
 
 [tool.black]
 line-length = 150

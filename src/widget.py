@@ -13,22 +13,20 @@ def mask_account_card(account_info: str) -> str:
         if len(parts) != 2 or not parts[1].isdigit():
             raise ValueError(
                 "Неверный формат номера счета. "
-                "Ожидается: 'Счет XXXX' где X - цифры"
-            )
+                "Ожидается: 'Счет XXXX' где X - цифры")
         return f"{parts[0]} {mask_account_number(parts[1])}"
 
-    parts = account_info.rsplit(' ', 1)
+    parts = account_info.rsplit(" ", 1)
     if len(parts) != 2 or not parts[1].isdigit():
         raise ValueError(
             "Неверный формат номера карты. "
-            "Ожидается: 'НазваниеКарты XXXX' где X - цифры"
-        )
+            "Ожидается: 'НазваниеКарты XXXX' где X - цифры")
     return f"{parts[0]} {mask_card_number(parts[1])}"
 
 
 def get_date(date_str: str) -> str:
     try:
-        date_obj = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+        date_obj = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
         return date_obj.strftime("%d.%m.%Y")
     except (ValueError, AttributeError) as e:
         raise ValueError(f"Неверный формат даты: {date_str}") from e
