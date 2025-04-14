@@ -28,6 +28,13 @@ sorted_ops = sort_by_date(operations, reverse=False)
 ```
 
 ## Тестирование
+
 ```bash
-poetry run pytest tests/
+# Запуск тестов
+pytest tests/
+
+# Проверка покрытия
+pytest --cov=src --cov-report=html tests/
 ```
+
+Отчёт о покрытии: откройте `htmlcov/index.html`
