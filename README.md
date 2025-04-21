@@ -31,3 +31,26 @@ sorted_ops = sort_by_date(operations, reverse=False)
 ```bash
 poetry run pytest tests/
 ```
+
+## Модуль generators
+
+### Функции:
+1. `filter_by_currency(transactions, currency_code)`  
+   Фильтрует транзакции по валюте. Возвращает итератор.
+
+   Пример:
+   ```python
+   usd_transactions = filter_by_currency(transactions, "USD")
+   print(next(usd_transactions))
+   ```
+
+2. `transaction_descriptions(transactions)`  
+   Генерирует описания транзакций.
+
+3. `card_number_generator(start, end)`  
+   Генерирует номера карт в заданном диапазоне.
+
+### Тестирование
+```bash
+pytest tests/test_generators.py
+```
