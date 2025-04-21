@@ -1,7 +1,11 @@
-from typing import Dict, List, Iterator, Iterable
+from typing import Dict
+from typing import Iterator
+from typing import List
 
 
-def filter_by_currency(transactions: List[Dict], currency_code: str) -> Iterator[Dict]:
+def filter_by_currency(
+    transactions: List[Dict], currency_code: str
+) -> Iterator[Dict]:
     """
     Фильтрует транзакции по коду валюты.
 
@@ -45,4 +49,6 @@ def card_number_generator(start: int, end: int) -> Iterator[str]:
         Номера карт в формате "XXXX XXXX XXXX XXXX"
     """
     for num in range(start, end + 1):
-        yield f"{num:016d}"[:4] + " " + f"{num:016d}"[4:8] + " " + f"{num:016d}"[8:12] + " " + f"{num:016d}"[12:16]
+        yield f"{num:016d}"[:4] + " " + f"{num:016d}"[
+            4:8
+        ] + " " + f"{num:016d}"[8:12] + " " + f"{num:016d}"[12:16]
