@@ -31,3 +31,24 @@ sorted_ops = sort_by_date(operations, reverse=False)
 ```bash
 poetry run pytest tests/
 ```
+## Модуль decorators
+
+### Декоратор log
+Логирует выполнение функций в файл или консоль.
+
+```python
+from src.decorators import log
+
+@log(filename="app.log")  # Логи в файл
+def calculate(a, b):
+    return a + b
+
+@log()  # Логи в консоль
+def greet(name):
+    return f"Hello, {name}"
+```
+
+### Тестирование
+```bash
+pytest tests/test_decorators.py
+```
