@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 from src.external_api import convert_to_rub
 
 
-def test_api_connection():
-    """Тест подключения к API"""
+def test_connection():
+    """Тестирование подключения к API"""
     load_dotenv()
 
     test_cases = [
@@ -22,4 +22,4 @@ def test_api_connection():
 
 
 if __name__ == "__main__":
-    test_api_connection()
+    test_connection()

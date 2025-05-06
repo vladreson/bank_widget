@@ -1,71 +1,80 @@
-import os
-from decimal import Decimal
-from typing import Any
-from typing import Dict
-from typing import Union
-
+from typing import Dict, Union, Optional, Any
 import requests
+import os
+from time import sleep
 
 
-def convert_to_rub(
-    transaction: Dict[str, Union[str, float, Decimal]],
-) -> float:
+class ExchangeAPI:
+    """Класс для работы с API обменных курсов с полной типизацией"""
+
+    def __init__(self) -> None:
+        self.timeout: int = 15
+        self.max_retries: int = 2
+        self.base_url: str = "https://api.apilayer.com/exchangerates_data/"
+        self.headers: Dict[str, str] = {
+            "apikey": os.getenv("EXCHANGE_RATE_API_KEY", "")
+        }
+
+    def _fetch_rate(self, currency: str) -> Optional[float]:
+        """Основной метод получения курса с явной типизацией"""
+        params: Dict[str, str] = {"base": currency, "symbols": "RUB"}
+
+        try:
+            response: requests.Response = requests.get(
+                f"{self.base_url}latest",
+                headers=self.headers,
+                params=params,
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            response_data: Dict[str, Any] = response.json()
+            return float(response_data["rates"]["RUB"])
+        except (requests.exceptions.RequestException, KeyError, ValueError):
+            return None
+
+    def get_exchange_rate(self, currency: str) -> float:
+        """Получает курс с повторными попытками и гарантированным возвратом float"""
+        for _ in range(self.max_retries):
+            rate: Optional[float] = self._fetch_rate(currency)
+            if rate is not None:
+                return rate
+            sleep(1)
+        raise ConnectionError(f"Не удалось получить курс для {currency}")
+
+
+def convert_to_rub(transaction: Dict[str, Union[str, float, int]]) -> float:
     """
-    Конвертирует сумму транзакции в рубли.
+    Полностью типизированная функция конвертации валюты.
 
     Args:
         transaction: Словарь с обязательными ключами:
-                    - 'amount': Union[float, Decimal]
+                    - 'amount': Union[float, int]
                     - 'currency': str
 
     Returns:
         Сумма в рублях (float)
 
     Raises:
-        ValueError: При ошибках API или неподдерживаемой валюте
+        ValueError: При ошибках валидации или API
     """
-    # Явная проверка и приведение типов
+    amount: float
+    currency: str
+
     try:
-        amount = transaction["amount"]
-        currency = transaction["currency"]
-
-        # Преобразование amount в float
-        amount_float = (
-            float(amount) if not isinstance(amount, float) else amount
-        )
-
-        # Проверка типа currency
-        if not isinstance(currency, str):
-            raise TypeError("Currency must be a string")
-
-    except KeyError as e:
-        raise ValueError(f"Отсутствует обязательное поле: {e}")
-    except (TypeError, ValueError) as e:
-        raise ValueError(f"Некорректный тип данных: {e}")
+        amount = float(transaction["amount"])
+        currency = str(transaction["currency"]).upper()
+    except (KeyError, ValueError, TypeError) as e:
+        raise ValueError(f"Некорректные данные транзакции: {e}")
 
     if currency == "RUB":
-        return amount_float
+        return amount
 
     if currency not in ("USD", "EUR"):
         raise ValueError(f"Неподдерживаемая валюта: {currency}")
 
-    api_key = os.getenv("EXCHANGE_RATE_API_KEY")
-    if not api_key:
-        raise ValueError("API ключ не найден")
-
-    url = f"https://api.apilayer.com/exchangerates_data/latest?base={currency}"
-    headers = {"apikey": api_key}
-
+    api: ExchangeAPI = ExchangeAPI()
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-
-        rates_data: Dict[str, Any] = response.json()
-        rate = float(rates_data["rates"]["RUB"])
-
-        return round(amount_float * rate, 2)
-
-    except requests.exceptions.RequestException as e:
-        raise ValueError(f"Ошибка API: {str(e)}")
-    except (KeyError, ValueError) as e:
-        raise ValueError(f"Ошибка обработки данных: {str(e)}")
+        rate: float = api.get_exchange_rate(currency)
+        return round(amount * rate, 2)
+    except ConnectionError as e:
+        raise ValueError(str(e))
