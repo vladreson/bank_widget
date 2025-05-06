@@ -1,55 +1,151 @@
-from typing import Dict, Union, Optional, Any
-import requests
 import os
-from time import sleep
+from datetime import datetime
+from datetime import timedelta
+from typing import Optional
+from typing import TypedDict
+from typing import Dict, Union
+
+import requests
 
 
-class ExchangeAPI:
-    """Класс для работы с API обменных курсов с полной типизацией"""
+class ExchangeRateResponse(TypedDict):
+    """Типизированный формат ответа API"""
 
-    def __init__(self) -> None:
-        self.timeout: int = 15
-        self.max_retries: int = 2
-        self.base_url: str = "https://api.apilayer.com/exchangerates_data/"
-        self.headers: Dict[str, str] = {
-            "apikey": os.getenv("EXCHANGE_RATE_API_KEY", "")
-        }
+    success: bool
+    timestamp: Optional[int]
+    base: str
+    date: str
+    rates: Dict[str, float]
 
-    def _fetch_rate(self, currency: str) -> Optional[float]:
-        """Основной метод получения курса с явной типизацией"""
-        params: Dict[str, str] = {"base": currency, "symbols": "RUB"}
 
+class CacheEntry(TypedDict):
+    """Типизированный формат записи кеша"""
+
+    rates: Dict[str, float]
+    expiry: datetime
+
+
+class ExchangeRatesAPI:
+    """Класс для работы с Exchange Rates Data API"""
+
+    def __init__(self, api_key: str) -> None:
+        """
+        Инициализация API клиента
+
+        Args:
+            api_key: Ключ для доступа к API
+        """
+        self.base_url = "https://api.apilayer.com/exchangerates_data"
+        self.headers = {"apikey": api_key}
+        self.timeout = 15
+        self.cache: Dict[str, CacheEntry] = {}
+        self.cache_expiry = timedelta(hours=1)
+
+    def _make_request(
+        self, endpoint: str, params: Optional[Dict[str, str]] = None
+    ) -> ExchangeRateResponse:
+        """
+        Выполняет запрос к API
+
+        Args:
+            endpoint: API endpoint
+            params: Параметры запроса
+
+        Returns:
+            Ответ API в типизированном формате
+
+        Raises:
+            ValueError: При ошибках запроса
+        """
+        url = f"{self.base_url}/{endpoint}"
         try:
-            response: requests.Response = requests.get(
-                f"{self.base_url}latest",
-                headers=self.headers,
-                params=params,
-                timeout=self.timeout,
+            response = requests.get(
+                url, headers=self.headers, params=params, timeout=self.timeout
             )
             response.raise_for_status()
-            response_data: Dict[str, Any] = response.json()
-            return float(response_data["rates"]["RUB"])
-        except (requests.exceptions.RequestException, KeyError, ValueError):
-            return None
+            data: ExchangeRateResponse = response.json()
+            return data
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"API request failed: {str(e)}")
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"Invalid API response: {str(e)}")
 
-    def get_exchange_rate(self, currency: str) -> float:
-        """Получает курс с повторными попытками и гарантированным возвратом float"""
-        for _ in range(self.max_retries):
-            rate: Optional[float] = self._fetch_rate(currency)
-            if rate is not None:
-                return rate
-            sleep(1)
-        raise ConnectionError(f"Не удалось получить курс для {currency}")
+    def get_rates(self, base_currency: str = "USD") -> Dict[str, float]:
+        """
+        Получает текущие курсы валют
+
+        Args:
+            base_currency: Базовая валюта
+
+        Returns:
+            Словарь с курсами валют (валюта -> курс)
+
+        Raises:
+            ValueError: При ошибках API
+        """
+        cache_key = f"rates_{base_currency}"
+
+        # Проверка кеша с правильными типами
+        if cache_key in self.cache:
+            cached = self.cache[cache_key]
+            if datetime.now() < cached["expiry"]:
+                return cached["rates"]
+
+        data = self._make_request("latest", {"base": base_currency})
+
+        if not isinstance(data.get("rates"), dict):
+            raise ValueError("Invalid rates format in API response")
+
+        # Создаем запись кеша с правильными типами
+        rates = {
+            currency: float(rate) for currency, rate in data["rates"].items()
+        }
+        cache_entry: CacheEntry = {
+            "rates": rates,
+            "expiry": datetime.now() + self.cache_expiry,
+        }
+        self.cache[cache_key] = cache_entry
+
+        return rates
+
+    def convert(
+        self, amount: float, from_currency: str, to_currency: str
+    ) -> float:
+        """
+        Конвертирует сумму между валютами
+
+        Args:
+            amount: Сумма для конвертации
+            from_currency: Исходная валюта
+            to_currency: Целевая валюта
+
+        Returns:
+            Сконвертированная сумма (округленная до 2 знаков)
+
+        Raises:
+            ValueError: При ошибках конвертации
+        """
+        if from_currency == to_currency:
+            return amount
+
+        rates = self.get_rates(from_currency)
+
+        try:
+            rate = rates[to_currency]
+            return round(float(amount) * rate, 2)
+        except KeyError as e:
+            raise ValueError(f"Unsupported currency: {str(e)}")
 
 
-def convert_to_rub(transaction: Dict[str, Union[str, float, int]]) -> float:
+def convert_to_rub(transaction: Dict[str, Union[str, float]]) -> float:
     """
-    Полностью типизированная функция конвертации валюты.
+    Конвертирует сумму транзакции в рубли
 
     Args:
-        transaction: Словарь с обязательными ключами:
-                    - 'amount': Union[float, int]
-                    - 'currency': str
+        transaction: {
+            "amount": число,
+            "currency": "USD"/"EUR"/"RUB"
+        }
 
     Returns:
         Сумма в рублях (float)
@@ -57,24 +153,22 @@ def convert_to_rub(transaction: Dict[str, Union[str, float, int]]) -> float:
     Raises:
         ValueError: При ошибках валидации или API
     """
-    amount: float
-    currency: str
-
     try:
         amount = float(transaction["amount"])
         currency = str(transaction["currency"]).upper()
-    except (KeyError, ValueError, TypeError) as e:
-        raise ValueError(f"Некорректные данные транзакции: {e}")
+    except (KeyError, ValueError) as e:
+        raise ValueError(f"Invalid transaction data: {e}")
 
     if currency == "RUB":
         return amount
 
-    if currency not in ("USD", "EUR"):
-        raise ValueError(f"Неподдерживаемая валюта: {currency}")
+    api = ExchangeRatesAPI(os.getenv("EXCHANGE_RATE_API_KEY"))
 
-    api: ExchangeAPI = ExchangeAPI()
     try:
-        rate: float = api.get_exchange_rate(currency)
+        rate = api.get_rates(currency)["RUB"]
         return round(amount * rate, 2)
-    except ConnectionError as e:
-        raise ValueError(str(e))
+    except KeyError:
+        raise ValueError(f"Unsupported currency: {currency}")
+    except ValueError as e:
+        raise ValueError(f"API error: {str(e)}")
+
