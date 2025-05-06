@@ -31,3 +31,18 @@ sorted_ops = sort_by_date(operations, reverse=False)
 ```bash
 poetry run pytest tests/
 ```
+
+# Банковский обработчик операций
+
+## Функционал
+- Фильтрация операций по статусу (`EXECUTED`/`CANCELED`)
+- Сортировка операций по дате
+- Чтение данных из JSON-файла
+- Конвертация валют (USD/EUR в RUB) с использованием внешнего API
+- Сокрытие чувствительных данных (API keys) с помощью .env
+
+## Установка
+1. Склонируйте репозиторий:
+```bash
+git clone https://github.com/vladreson/bank_widget.git
+cd bank_widget
