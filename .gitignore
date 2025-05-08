@@ -14,5 +14,7 @@ __pycache__/
 Thumbs.db
 
 # Logs
-*.log
+.log
+!utils.log
+!maska.log
 EOF
