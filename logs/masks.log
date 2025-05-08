@@ -1,3 +1,0 @@
-2025-05-08 10:34:02 - masks - INFO - Card number masked: 1234567890123456 -> 1234 56** **** 3456
-2025-05-08 10:34:02 - masks - INFO - Account number masked: 12345678 -> **5678
-2025-05-08 10:34:02 - masks - ERROR - Account number too short: 123

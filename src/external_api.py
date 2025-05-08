@@ -1,9 +1,10 @@
 import os
 from datetime import datetime
 from datetime import timedelta
+from typing import Dict
 from typing import Optional
 from typing import TypedDict
-from typing import Dict, Union
+from typing import Union
 
 import requests
 
@@ -85,7 +86,6 @@ class ExchangeRatesAPI:
         """
         cache_key = f"rates_{base_currency}"
 
-        # Проверка кеша с правильными типами
         if cache_key in self.cache:
             cached = self.cache[cache_key]
             if datetime.now() < cached["expiry"]:
@@ -96,10 +96,10 @@ class ExchangeRatesAPI:
         if not isinstance(data.get("rates"), dict):
             raise ValueError("Invalid rates format in API response")
 
-        # Создаем запись кеша с правильными типами
         rates = {
             currency: float(rate) for currency, rate in data["rates"].items()
         }
+
         cache_entry: CacheEntry = {
             "rates": rates,
             "expiry": datetime.now() + self.cache_expiry,
@@ -162,7 +162,13 @@ def convert_to_rub(transaction: Dict[str, Union[str, float]]) -> float:
     if currency == "RUB":
         return amount
 
-    api = ExchangeRatesAPI(os.getenv("EXCHANGE_RATE_API_KEY"))
+    api_key = os.getenv("EXCHANGE_RATE_API_KEY")
+    if api_key is None:
+        raise ValueError(
+            "EXCHANGE_RATE_API_KEY environment variable is not set"
+        )
+
+    api = ExchangeRatesAPI(api_key)
 
     try:
         rate = api.get_rates(currency)["RUB"]
@@ -171,4 +177,3 @@ def convert_to_rub(transaction: Dict[str, Union[str, float]]) -> float:
         raise ValueError(f"Unsupported currency: {currency}")
     except ValueError as e:
         raise ValueError(f"API error: {str(e)}")
-

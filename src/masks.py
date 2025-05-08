@@ -1,7 +1,7 @@
 from src.config_logger import setup_logger
 
 # Инициализация логгера
-logger = setup_logger('masks', 'masks.log')
+logger = setup_logger("masks", "masks.log")
 
 
 def mask_account_number(account_number: str) -> str:
@@ -27,7 +27,9 @@ def mask_card_number(card_number: str) -> str:
             logger.error(f"Invalid card number length: {card_number}")
             return card_number
 
-        masked = f"{card_number[:4]} {card_number[4:6]}** **** {card_number[-4:]}"
+        masked = (
+            f"{card_number[:4]} {card_number[4:6]}** **** {card_number[-4:]}"
+        )
         logger.info(f"Card number masked: {card_number} -> {masked}")
         return masked
     except Exception as e:
