@@ -27,14 +27,14 @@ def check_api_connection(api_key: str) -> Dict[str, Union[bool, str, float]]:
         "api_reachable": False,
         "api_response_valid": False,
         "connection_time": 0.0,
-        "error": None
+        "error": None,
     }
 
     # Актуальные endpoints из документации
     base_url = "https://api.apilayer.com/exchangerates_data"
     endpoints = {
         "latest": f"{base_url}/latest?base=USD",
-        "convert": f"{base_url}/convert?to=RUB&from=USD&amount=1"
+        "convert": f"{base_url}/convert?to=RUB&from=USD&amount=1",
     }
 
     headers = {"apikey": api_key}
@@ -55,7 +55,9 @@ def check_api_connection(api_key: str) -> Dict[str, Union[bool, str, float]]:
 
                 # 3. Проверка валидности ответа
                 data = response.json()
-                if name == "latest" and not isinstance(data.get("rates"), dict):
+                if name == "latest" and not isinstance(
+                    data.get("rates"), dict
+                ):
                     raise ValueError("Invalid rates format")
                 elif name == "convert" and "result" not in data:
                     raise ValueError("Missing result field")
@@ -87,25 +89,43 @@ def print_connection_report(api_key: str):
     print("\n📊 Connection Test Results:")
     print(f"✅ DNS Resolved: {'Yes' if checks['dns_resolved'] else '❌ No'}")
     print(f"✅ API Reachable: {'Yes' if checks['api_reachable'] else '❌ No'}")
-    print(f"✅ Response Valid: {'Yes' if checks['api_response_valid'] else '❌ No'}")
-    print(f"⏱️ Connection Time: {checks['connection_time']:.2f}s")
+    print(
+        f"✅ Response Valid: {'Yes' if checks['api_response_valid'] else '❌ No'}"
+    )
+    print(
+        f"⏱️ Connection Time: "
+        f"{checks['connection_time']:.2f}s"
+    )
 
     if checks["error"]:
         print(f"\n❌ Error Details: {checks['error']}")
         print("\n💡 Troubleshooting Tips:")
         if "404" in str(checks["error"]):
-            print("- Убедитесь, что используете правильные endpoints (см. документацию)")
-            print("- Проверьте актуальность API ключа")
+            print(
+                "- Убедитесь, что используете правильные endpoints (см. документацию)"
+            )
+            print(
+                "- Проверьте актуальность "
+                "API ключа"
+            )
         elif "403" in str(checks["error"]):
             print("- Неверный или неактивный API ключ")
             print("- Проверьте лимиты запросов в кабинете apilayer")
 
-    if all([checks["dns_resolved"], checks["api_reachable"], checks["api_response_valid"]]):
+    if all(
+        [
+            checks["dns_resolved"],
+            checks["api_reachable"],
+            checks["api_response_valid"],
+        ]
+    ):
         print("\n🎉 All connection tests passed successfully!")
     else:
         print("\n⚠️ Service is unavailable. See details above.")
 
 
 if __name__ == "__main__":
-    api_key = os.getenv("EXCHANGE_RATE_API_KEY") or input("Enter your API key: ")
+    api_key = os.getenv("EXCHANGE_RATE_API_KEY") or input(
+        "Enter your API key: "
+    )
     print_connection_report(api_key)
