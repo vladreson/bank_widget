@@ -1,5 +1,6 @@
-from src.utils import read_json_file
-from src.masks import mask_account_number, mask_card_number
+from src.masks import mask_account_number
+from src.masks import mask_card_number
+from src.utils.file_reader import read_json_file
 
 
 def test_logging():

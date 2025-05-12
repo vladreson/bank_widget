@@ -1,5 +1,8 @@
+from unittest.mock import mock_open
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import mock_open, patch
+
 from src.utils.file_reader import read_json_file
 
 

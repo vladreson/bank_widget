@@ -46,3 +46,14 @@ poetry run pytest tests/
 ```bash
 git clone https://github.com/vladreson/bank_widget.git
 cd bank_widget
+```
+
+# Финансовый анализ
+
+## Новая функциональность
+
+- Добавлена поддержка импорта финансовых транзакций из CSV и Excel файлов.
+- Реализованы функции `read_transactions_csv` и `read_transactions_excel` в модуле `file_importer.py`.
+- Добавлены соответствующие тесты с использованием `pytest` и `unittest.mock`.
+
+
