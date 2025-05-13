@@ -8,10 +8,11 @@ class TestWidgetFunctions(unittest.TestCase):
     def test_mask_account_card(self):
         self.assertEqual(
             mask_account_card("Visa Platinum 7000792289606361"),
-            "Visa Platinum 7000 79** **** 6361")
+            "Visa Platinum 7000 79** **** 6361",
+        )
         self.assertEqual(
-            mask_account_card("Счет 73654108430135874305"),
-            "Счет **4305")
+            mask_account_card("Счет 73654108430135874305"), "Счет **4305"
+        )
 
     def test_get_date(self):
         self.assertEqual(get_date("2018-07-11T02:26:18.671407"), "11.07.2018")
