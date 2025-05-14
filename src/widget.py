@@ -13,14 +13,16 @@ def mask_account_card(account_info: str) -> str:
         if len(parts) != 2 or not parts[1].isdigit():
             raise ValueError(
                 "Неверный формат номера счета. "
-                "Ожидается: 'Счет XXXX' где X - цифры")
+                "Ожидается: 'Счет XXXX' где X - цифры"
+            )
         return f"{parts[0]} {mask_account_number(parts[1])}"
 
     parts = account_info.rsplit(" ", 1)
     if len(parts) != 2 or not parts[1].isdigit():
         raise ValueError(
             "Неверный формат номера карты. "
-            "Ожидается: 'НазваниеКарты XXXX' где X - цифры")
+            "Ожидается: 'НазваниеКарты XXXX' где X - цифры"
+        )
     return f"{parts[0]} {mask_card_number(parts[1])}"
 
 
